@@ -1,10 +1,11 @@
-# from langchain_core.
-from pydantic import BaseModel, Field, EmailStr, model_validator
+from langchain_core.utils.pydantic import model_validate
+from pydantic import BaseModel, Field, EmailStr, model_validator, ValidationError
 
 
-# 定义一个类，指定用户传递那些信息
+#定义一个类，指定用户传递那些信息
 class RegisterIn(BaseModel):
-    username: str=Field(min_length=1,max_length=10)
+    username: str=Field(min_length=3,max_length=10)
+    # 对密码格式进行校验
     email: EmailStr
     password: str
     confirm_password: str
@@ -15,7 +16,7 @@ class RegisterIn(BaseModel):
     @model_validator(mode='after')
     def password_match(self):
         if self.password != self.confirm_password:
-            raise ValueError('Passwords do not match')
+            raise ValidationError('Passwords do not match')
         return self
 
 class CurrentUser(BaseModel):
@@ -24,13 +25,18 @@ class CurrentUser(BaseModel):
     email: EmailStr
     full_name: str
     role: str
-    permissions:set[str]
+    permissions: set[str]
+
+class LoginIn(BaseModel):
+    account: str
+    password: str
+
 
 class TokenOut(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
 
-class LoginIn(BaseModel):
-    account: str
-    password: str
+# 用来接收刷新token的参数
+class RefreshIn(BaseModel):
+    refresh_token: str = Field(min_length=20)

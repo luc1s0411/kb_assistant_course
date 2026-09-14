@@ -54,5 +54,7 @@ Content-Type: application/json
   "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMyIsInJvbGUiOiJwdWJsaWMiLCJ0eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4OTYzNDk2NH0.LZhyM9UDPVeiYdTAEpn4-2mMq9oy1vataSaqIFo4CCI"
 }
 
-
+### 查询当前用户  通过token访问的格式如下：Authorization: Bearer
+GET http://127.0.0.1:8000/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMyIsInJvbGUiOiJwdWJsaWMiLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg5MzY5MTIyfQ.KFPXCppHQh9ptFV8eo2i3NLy51-C5US9Ju7LbZ1z93M
 

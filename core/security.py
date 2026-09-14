@@ -13,7 +13,6 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from core.config import settings
 
-
 # 创建token
 def _create_token(
     user_id: int,
@@ -54,3 +53,6 @@ def _decode_token(token: str, expected_type: str) -> tuple[int, str]:
 # 解析访问token
 def decode_access_token(token: str) -> tuple[int, str]:
     return _decode_token(token, "access")
+
+def decode_refresh_token(token: str) -> tuple[int, str]:
+    return _decode_token(token, "refresh")
