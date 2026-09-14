@@ -1,0 +1,11 @@
+model文件：专门与数据库表，模型，一对一对应的文件 class Role(Base):
+
+repository文件：与数据库交互，增删改查
+
+router文件：路由，与用户交互的文件
+
+service文件：业务流程，处理项目中的各种业务组合
+
+verification文件：主要是一些校验代码
+
+schemas文件：专门用来定义一些类，接收和返回用户交互的数据

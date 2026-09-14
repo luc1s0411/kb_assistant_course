@@ -1,0 +1,58 @@
+# Test your FastAPI endpoints
+
+GET http://127.0.0.1:8000/
+Accept: application/json
+
+###
+
+GET http://127.0.0.1:8000/hello/User
+Accept: application/json
+
+###
+GET http://127.0.0.1:8000/auth/sendCode?email=luc1s_yuan@outlook.com
+Accept: application/json
+
+###
+GET http://127.0.0.1:8000/auth/sendCode?email=137308003@qq.com
+Accept: application/json
+
+###
+GET http://127.0.0.1:8000/auth/sendCode?email=1361762620@qq.com
+Accept: application/json
+
+###
+GET http://127.0.0.1:8000/auth/sendCode?email=luc1s_yuan@qq.com
+Accept: application/json
+
+###
+POST http://127.0.0.1:8000/auth/register
+Content-Type: application/json
+
+{
+    "username": "qingjiyuan",
+    "email": "luc1s_yuan@qq.com",
+    "password":"123456",
+    "confirm_password":"123456",
+    "code":"3999",
+    "full_name":"课程学生"
+}
+
+###
+POST http://127.0.0.1:8000/auth/login
+Content-Type: application/json
+
+{
+    "account": "luc1s_yuan@qq.com",
+    "password": "123456"
+}
+
+###
+POST http://127.0.0.1:8000/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMyIsInJvbGUiOiJwdWJsaWMiLCJ0eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4OTYzNDk2NH0.LZhyM9UDPVeiYdTAEpn4-2mMq9oy1vataSaqIFo4CCI"
+}
+
+
+
