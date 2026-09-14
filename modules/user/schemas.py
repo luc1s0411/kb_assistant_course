@@ -40,3 +40,8 @@ class TokenOut(BaseModel):
 # 用来接收刷新token的参数
 class RefreshIn(BaseModel):
     refresh_token: str = Field(min_length=20)
+
+class ProfileUpdateIn(BaseModel):
+    username: str | None = Field(None)
+    email: str | None = Field(None)
+    full_name: str | None = Field(None)

@@ -6,7 +6,9 @@ from modules.user.verification import generate_code,save_code,send_code_email
 from sqlalchemy.orm import Session
 # 发送邮件，并存储到redis
 from modules.user.verification import send_code_email
-from modules.user.repository import get_user_by_email
+from modules.user.repository import get_user_by_email, update_user_profile
+
+
 async def request_verification_code(email:str,db:Session):
 
     # 如果这个邮箱已经注册过，我们是没必要继续发邮件，直接提醒用户，该邮箱已经注册
@@ -24,9 +26,9 @@ async def request_verification_code(email:str,db:Session):
         print(err)
     return {"message":f"验证码发送成功，请及时去邮箱{email}查看"}
 
-from modules.user.schemas import RegisterIn, CurrentUser
+from modules.user.schemas import RegisterIn, CurrentUser, ProfileUpdateIn
 from modules.user.model import  User
-from modules.user.repository import create_user,get_perssion
+from modules.user.repository import create_user,get_permission
 from modules.user.verification import verify_code,delete_code
 from core.security import verify_password,hash_password
 
@@ -37,7 +39,7 @@ def to_current_user(db:Session,user:User):
         email=user.email,
         full_name=user.full_name,
         role=user.role.name,
-        permissions=get_perssion(db,int(user.id))
+        permissions=get_permission(db, int(user.id))
     )
 
 async def register_user(db:Session,userinfo: RegisterIn):
@@ -77,7 +79,7 @@ def _token_out(row) -> TokenOut:
     )
     return TokenOut(access_token=access_token, refresh_token=refresh_token)
 
-from modules.user.schemas import LoginIn,RefreshIn
+from modules.user.schemas import LoginIn,RefreshIn,ProfileUpdateIn
 def login_user(db: Session, data: LoginIn):
 
     user:User = get_user_by_email(db, data.account)
@@ -106,3 +108,10 @@ def refresh_tokens(db: Session, data: RefreshIn) -> TokenOut:
             detail="用户不存在、已停用或角色已变更",
         )
     return _token_out(user)
+
+def update_profile(data: ProfileUpdateIn,
+                   user:CurrentUser,
+                   db: Session):
+    # 需要找到与数据库相对应的model，来更新
+    my_user =update_user_profile(data, user, db)
+    return to_current_user(db,my_user)

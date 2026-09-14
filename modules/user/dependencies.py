@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from core.security import decode_access_token
 from database.connection import get_session
-from modules.user.repository import get_perssion, get_user_by_id
+from modules.user.repository import get_permission, get_user_by_id
 from modules.user.schemas import CurrentUser
 # 这个文件一般写依
 # 赖注入的一些函数
@@ -38,5 +38,5 @@ def get_current_user(
         email=user.email,
         full_name=user.full_name,
         role=user.role.name,
-        permissions=get_perssion(db,int(user.id))
+        permissions=get_permission(db, int(user.id))
     )
