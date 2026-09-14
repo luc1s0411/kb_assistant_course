@@ -45,3 +45,7 @@ class ProfileUpdateIn(BaseModel):
     username: str | None = Field(None)
     email: str | None = Field(None)
     full_name: str | None = Field(None)
+
+class UpdatePasswordIn(BaseModel):
+    current_password: str
+    new_password: str

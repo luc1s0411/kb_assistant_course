@@ -42,8 +42,8 @@ POST http://127.0.0.1:8000/auth/login
 Content-Type: application/json
 
 {
-    "account": "luc1s_yuan@qq.com",
-    "password": "123456"
+    "account": "572201828@qq.com",
+    "password": "111111"
 }
 
 ###
@@ -67,4 +67,15 @@ Content-Type: application/json
   "username": "student01",
   "email": "572201828@qq.com",
   "full_name": "更新后的课程学生"
+}
+
+
+### 修改密码。给我旧密码和新密码，给我修改成新的
+PUT http://127.0.0.1:8000/auth/me/password
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMyIsInJvbGUiOiJwdWJsaWMiLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg5Mzc2Nzg4fQ.ATlCfcm0d6vLwbVhH3whCqBH4V81KB-OIkodFZtMc10
+Content-Type: application/json
+
+{
+  "current_password":"111111",
+  "new_password":"123456"
 }

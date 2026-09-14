@@ -14,8 +14,8 @@ async def send_code(email: EmailStr,db:Session=Depends(get_session)):
     return await request_verification_code(email,db)
 
 # 插入用户传递的数据
-from modules.user.schemas import RegisterIn,CurrentUser,LoginIn,TokenOut
-from modules.user.service import register_user,login_user,refresh_tokens,update_profile
+from modules.user.schemas import RegisterIn, CurrentUser, LoginIn, TokenOut, UpdatePasswordIn
+from modules.user.service import register_user,login_user,refresh_tokens,update_profile, update_password_by_id
 
 @router.post("/register",response_model=CurrentUser)
 async def register(userinfo: RegisterIn,db:Session=Depends(get_session)):
@@ -44,3 +44,8 @@ def update_me(data: ProfileUpdateIn,
               db: Session = Depends(get_session)):
     return update_profile(data, user, db)
 
+@router.put("/me/password")
+def update_password(data:UpdatePasswordIn,
+                    current_user:CurrentUser = Depends(get_current_user),
+                    db: Session = Depends(get_session)):
+    return update_password_by_id(data, current_user, db)
