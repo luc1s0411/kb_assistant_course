@@ -19,6 +19,12 @@ def _env_bool(name: str, default: bool) -> bool:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
+def _project_path(name: str, default: str) -> Path:
+    value = Path(os.getenv(name, default)).expanduser()
+    if not value.is_absolute():
+        value = PROJECT_ROOT / value
+    return value.resolve()
+
 class Settings(BaseModel):
     # 获取配置
     app_host: str = os.getenv("APP_HOST", "localhost")
@@ -45,6 +51,8 @@ class Settings(BaseModel):
     access_token_minutes: int = int(os.getenv("ACCESS_TOKEN_MINUTES", 30))
     refresh_token_days: int = int(os.getenv("REFRESH_TOKEN_DAYS", 7))
 
+    docs_dir: Path = _project_path("DOCS_DIR", "./data/docs")
+    
     def validate_runtime(self):
         if not self.db_host or not self.db_user or not self.db_name:
             raise ValueError("DB_HOST、DB_USER、DB_NAME 不能为空")

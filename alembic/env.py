@@ -1,3 +1,4 @@
+from modules.knowledge import model as knowledge_model  # noqa: F401
 from logging.config import fileConfig
 
 from alembic import context
