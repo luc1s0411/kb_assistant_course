@@ -48,7 +48,10 @@ class User(Base):
     email:Mapped[str] = mapped_column(String(50),nullable=False,unique=True)
     password_hash:Mapped[str] = mapped_column(String(250),nullable=False)
     full_name:Mapped[str] = mapped_column(String(100))
-    role_code:Mapped[str] = mapped_column(ForeignKey("roles.code",ondelete="CASCADE"),default="public",nullable=False)
+    role_code:Mapped[str] = (
+        mapped_column(ForeignKey("roles.code",
+                                 ondelete="CASCADE"),
+                      default="public",nullable=False))
     is_active:Mapped[bool] = mapped_column(Boolean(True),nullable=False,default=True)
     created_at:Mapped[datetime] = mapped_column(DateTime(True),nullable=False,default=datetime.now())
     role:Mapped[Role] = relationship(lazy="selectin")

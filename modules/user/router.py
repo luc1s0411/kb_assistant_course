@@ -2,28 +2,40 @@ from fastapi import APIRouter, Depends
 from pydantic import EmailStr
 from sqlalchemy.orm import Session
 
-from database.connection import get_session
-from modules.user.schemas import RegisterIn, CurrentUser, TokenOut, LoginIn
-from modules.user.service import request_verification_code, register_user, login_user
+from modules.user.dependencies import get_current_user
+from modules.user.model import User
+from modules.user.repository import get_user_by_id
 
 router = APIRouter(prefix="/auth", tags=["用户认证"])
-
-from modules.user.verification import send_code_email,generate_code
+from database.connection import get_session
+from modules.user.service import request_verification_code
 @router.get("/sendCode")
-async def send_code(email: EmailStr, db: Session = Depends(get_session)):
-    return await request_verification_code(email, db)
+async def send_code(email: EmailStr,db:Session=Depends(get_session)):
+    return await request_verification_code(email,db)
+
+# 插入用户传递的数据
+from modules.user.schemas import RegisterIn,CurrentUser,LoginIn,TokenOut
+from modules.user.service import register_user,login_user,refresh_tokens
 
 @router.post("/register",response_model=CurrentUser)
-async def register(userinfo: RegisterIn, db: Session = Depends(get_session)):
-    # 调用service的代码存入数据
-    return await register_user(db, userinfo)
+async def register(userinfo: RegisterIn,db:Session=Depends(get_session)):
+    # 调用serviece的代码存入数据
+    return await register_user(db,userinfo)
+
 
 @router.post("/login",response_model=TokenOut)
-async def login(data:LoginIn, db: Session = Depends(get_session)):
-    # 调用service实现登录
-    return login_user(db, data)
+async def login(data:LoginIn,db:Session=Depends(get_session)):
+    # 调用sevice实现登录
+    return  login_user(db,data)
+
+from modules.user.schemas import RefreshIn
+@router.post("/refresh",response_model=TokenOut)
+async def refresh(data: RefreshIn, db: Session = Depends(get_session)) -> TokenOut:
+    return refresh_tokens(db, data)
+
+@router.get("/me",response_model=CurrentUser)
+async def me(user:CurrentUser=Depends(get_current_user)):
+    return user
 
 
-@router.post("/refresh")
-async def refresh():
-    return 
+
