@@ -46,3 +46,12 @@ def update_user_profile(data:ProfileUpdateIn,
     db.flush()
     db.commit()
     return my_user
+
+def update_password_hash(db:Session,
+                         user_id:int,
+                         password:str,):
+    user = db.get(User,user_id)
+    user.password_hash = password
+    db.flush()
+    db.commit()
+    return True

@@ -6,7 +6,7 @@ from modules.user.verification import generate_code,save_code,send_code_email
 from sqlalchemy.orm import Session
 # 发送邮件，并存储到redis
 from modules.user.verification import send_code_email
-from modules.user.repository import get_user_by_email, update_user_profile
+from modules.user.repository import get_user_by_email, update_user_profile, update_password_hash
 
 
 async def request_verification_code(email:str,db:Session):
@@ -26,7 +26,7 @@ async def request_verification_code(email:str,db:Session):
         print(err)
     return {"message":f"验证码发送成功，请及时去邮箱{email}查看"}
 
-from modules.user.schemas import RegisterIn, CurrentUser, ProfileUpdateIn
+from modules.user.schemas import RegisterIn, CurrentUser, ProfileUpdateIn, UpdatePasswordIn
 from modules.user.model import  User
 from modules.user.repository import create_user,get_permission
 from modules.user.verification import verify_code,delete_code
@@ -115,3 +115,19 @@ def update_profile(data: ProfileUpdateIn,
     # 需要找到与数据库相对应的model，来更新
     my_user =update_user_profile(data, user, db)
     return to_current_user(db,my_user)
+
+def update_password_by_id(data: UpdatePasswordIn,
+                          user:CurrentUser,
+                          db: Session):
+    # 1.校验
+    # 1.1 密码是否正确u
+    user = get_user_by_id(db, user.id)
+    if not verify_password(data.current_password, str(user.password_hash)):
+        raise HTTPException(status_code=400, detail="当前密码错误")
+    if data.current_password == data.new_password:
+        raise HTTPException(status_code=400, detail="新密码和旧密码不能一样")
+
+    # 2.更新
+    if not update_password_hash(db, user.id, hash_password(data.new_password)):
+        raise HTTPException(status_code=400, detail="新密码更新失败")
+    return {"message":"您的密码修改成功"}
