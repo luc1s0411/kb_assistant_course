@@ -1,7 +1,12 @@
 .venv/
 .env
+.env.*
+!.env.example
 __pycache__/
 *.pyc
+*.log
 data/chroma/
-
+data/*.db
+data/uploads/
+.idea/
 test_main.http
