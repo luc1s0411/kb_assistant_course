@@ -13,7 +13,9 @@ class KnowledgeDocument(Base):
 
     id: Mapped[int] = mapped_column(mysql.BIGINT(unsigned=True), primary_key=True, autoincrement=True)
     original_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    # uuid
     stored_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    # 服务器的那个位置
     source_path: Mapped[str] = mapped_column(String(500), nullable=False)
     file_type: Mapped[str] = mapped_column(String(20), nullable=False)
     visibility: Mapped[str] = mapped_column(String(20), nullable=False)
