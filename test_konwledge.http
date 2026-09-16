@@ -82,7 +82,7 @@ Content-Type: application/json
 
 ###
 @baseUrl = http://127.0.0.1:8000
-@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNCIsInJvbGUiOiJhZG1pbiIsInR5cGUiOiJhY2Nlc3MiLCJleHAiOjE3ODk0NjMyODh9.Z8DF1X4xgwiT-di2J5P-O-xgRBFQhBvQ00jkUMrEGkg
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNCIsInJvbGUiOiJhZG1pbiIsInR5cGUiOiJhY2Nlc3MiLCJleHAiOjE3ODk1NDUxMTl9.dXEIO6spLONpplugDRVrFjXHvoNAMlV4aytytWnOxp4
 @publicToken = 用户token
 @publicUserId = 13
 ### 核对管理员身份
