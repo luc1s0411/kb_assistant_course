@@ -131,7 +131,7 @@ def split_docs(documents: list[Document]) -> list[Document]:
         add_start_index=True,
     )
     return splitter.split_documents(documents)
-
+from modules.knowledge.ingestion.build_index import _add_chunks
 from modules.knowledge.model import KnowledgeDocument
 async def upload_document(db:Session,file:UploadFile,visibility,userid):
     # 1.上传文件
@@ -147,10 +147,10 @@ async def upload_document(db:Session,file:UploadFile,visibility,userid):
     chunks = split_docs(documents)
 
     # 把切的块存入charomdb
-
+    _add_chunks(chunks)
 
     document.chunk_count = len(chunks)
-    document.status = "pending" if chunks else "error"
+    document.status = "indexed" if chunks else "error"
     document.error_message = None if chunks else "未读取到可索引文本，请检查文件"
     db.commit()
 

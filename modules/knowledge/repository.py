@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from modules.knowledge.model import KnowledgeDocument
 # 世界标准时间，伦敦时间 0时区时间
@@ -24,3 +25,19 @@ def create_document( db: Session, original_name: str,
     # 因为我们是保存数据，一旦提交就能够获取到id
     db.flush()
     return row
+
+def all_documents(db: Session) -> list[KnowledgeDocument]:
+    return list(db.scalars(select(KnowledgeDocument)).all())
+
+
+def mark_indexed(row: KnowledgeDocument, chunks: int) -> None:
+    row.status = "indexed"
+    row.chunk_count = chunks
+    row.error_message = None
+    row.updated_at = utc_now()
+
+
+def mark_error(row: KnowledgeDocument, message: str) -> None:
+    row.status = "error"
+    row.error_message = message[:2000]
+    row.updated_at = utc_now()

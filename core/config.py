@@ -60,6 +60,14 @@ class Settings(BaseModel):
 
     # 拿到文件保存在服务器的那个文件夹
     docs_dir: Path = _project_path("DOCS_DIR", "./data/docs")
+
+    ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    ollama_embedding_model: str = os.getenv("OLLAMA_EMBEDDING_MODEL", "qwen3-embedding:4b")
+    chroma_dir: Path = _project_path("CHROMA_DIR", "./data/chroma")
+    collection_name: str = os.getenv("COLLECTION_NAME", "enterprise_kb_qwen3_4b_v1")
+    embedding_mode: str = "ollama"
+    chroma_mode: str = "embedded"
+
     def validate_runtime(self):
         if not self.db_host or not self.db_user or not self.db_name:
             raise ValueError("DB_HOST、DB_USER、DB_NAME 不能为空")
