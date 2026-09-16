@@ -3,10 +3,13 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import HTTPException, UploadFile
+from pydantic.deprecated.parse import load_file
 from sqlalchemy.orm import Session
 
 from core.config import settings
 from modules.knowledge import repository
+from modules.knowledge.model import KnowledgeDocument
+
 # 定义10m，我们限定上传的文件最大10m
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
@@ -58,4 +61,10 @@ async def upload_document(db:Session,file:UploadFile,visibility,userid):
     name, suffix, content = await _read_upload(file)
 
     # 2.把信息存入数据库
-    return _save_document(db, name, suffix, content, visibility, userid)
+    document:KnowledgeDocument =  _save_document(db, name, suffix, content, visibility, userid)
+
+    # 3.切片
+    # 3.1 读取硬盘上的文件和内容
+    documents = load_file()
+
+    # 4.存入chromdb

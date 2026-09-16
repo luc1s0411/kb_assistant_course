@@ -10,3 +10,4 @@ data/*.db
 data/uploads/
 .idea/
 test_main.http
+test_knowledge.http

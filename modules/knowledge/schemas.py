@@ -11,8 +11,8 @@ class KnowledgeDocumentOut(BaseModel):
     file_type: str              # 文件类型
     visibility : str            # 可见性
     status : str                # 状态
-    chunk_count: int            #
-    error_message: str | None
-    created_by: int
-    created_at: datetime
-    updated_at: datetime
+    chunk_count: int            # 切块数量
+    error_message: str | None   # 错误信息
+    created_by: int             # 创建人ID
+    created_at: datetime        # 创建时间
+    updated_at: datetime        # 更新时间
