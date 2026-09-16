@@ -1,0 +1,110 @@
+# Test your FastAPI endpoints
+
+GET http://127.0.0.1:8000/
+Accept: application/json
+
+###
+
+GET http://127.0.0.1:8000/hello/User
+Accept: application/json
+
+###
+GET http://127.0.0.1:8000/auth/sendCode?email=luc1s_yuan@outlook.com
+Accept: application/json
+
+###
+GET http://127.0.0.1:8000/auth/sendCode?email=137308003@qq.com
+Accept: application/json
+
+###
+GET http://127.0.0.1:8000/auth/sendCode?email=1361762620@qq.com
+Accept: application/json
+
+###
+GET http://127.0.0.1:8000/auth/sendCode?email=luc1s_yuan@qq.com
+Accept: application/json
+
+###
+POST http://127.0.0.1:8000/auth/register
+Content-Type: application/json
+
+{
+    "username": "qingjiyuan",
+    "email": "luc1s_yuan@qq.com",
+    "password":"123456",
+    "confirm_password":"123456",
+    "code":"3999",
+    "full_name":"课程学生"
+}
+
+###
+POST http://127.0.0.1:8000/auth/login
+Content-Type: application/json
+
+{
+    "account": "luc1s_yuan@qq.com",
+    "password": "123456"
+}
+
+###
+POST http://127.0.0.1:8000/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMyIsInJvbGUiOiJwdWJsaWMiLCJ0eXBlIjoicmVmcmVzaCIsImV4cCI6MTc4OTYzNDk2NH0.LZhyM9UDPVeiYdTAEpn4-2mMq9oy1vataSaqIFo4CCI"
+}
+
+### 查询当前用户  通过token访问的格式如下：Authorization: Bearer
+GET http://127.0.0.1:8000/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMyIsInJvbGUiOiJwdWJsaWMiLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg5MzY5MTIyfQ.KFPXCppHQh9ptFV8eo2i3NLy51-C5US9Ju7LbZ1z93M
+
+### 更新当前用户  通过token访问的格式如下：Authorization: Bearer
+PUT http://127.0.0.1:8000/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMyIsInJvbGUiOiJwdWJsaWMiLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg5MzcyMTUzfQ.FysaT6otvr3r7vzK0cRhGTHvlzBBn9sEpT6Q2_oyT5A
+Content-Type: application/json
+
+{
+  "username": "student01",
+  "email": "572201828@qq.com",
+  "full_name": "更新后的课程学生"
+}
+
+
+### 修改密码。给我旧密码和新密码，给我修改成新的
+PUT http://127.0.0.1:8000/auth/me/password
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMyIsInJvbGUiOiJwdWJsaWMiLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzg5Mzc2Nzg4fQ.ATlCfcm0d6vLwbVhH3whCqBH4V81KB-OIkodFZtMc10
+Content-Type: application/json
+
+{
+  "current_password":"111111",
+  "new_password":"123456"
+}
+
+###
+@baseUrl = http://127.0.0.1:8000
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNCIsInJvbGUiOiJhZG1pbiIsInR5cGUiOiJhY2Nlc3MiLCJleHAiOjE3ODk0NjMyODh9.Z8DF1X4xgwiT-di2J5P-O-xgRBFQhBvQ00jkUMrEGkg
+@publicToken = 用户token
+@publicUserId = 13
+### 核对管理员身份
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{adminToken}}
+### 核对普通用户身份
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{publicToken}}
+
+
+### 上传企业制度文件
+POST {{baseUrl}}/knowledge/documents
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=KnowledgeBoundary
+
+--KnowledgeBoundary
+Content-Disposition: form-data; name="visibility"
+
+public
+--KnowledgeBoundary
+Content-Disposition: form-data; name="file"; filename="明川科技员工日常办公与业务管理制度.md"
+Content-Type: text/markdown; charset=utf-8
+
+< ./data/samples/明川科技员工日常办公与业务管理制度.md
+--KnowledgeBoundary--
