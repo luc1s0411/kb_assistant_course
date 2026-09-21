@@ -47,3 +47,13 @@ def update_visibility(
     _: CurrentUser = Depends(require_permission("kb.manage_docs")),
 ) -> KnowledgeDocumentOut:
     return service.change_visibility(db, document_id, data.visibility)
+
+from fastapi import Response
+@router.delete("/documents/{document_id}", status_code=204)
+def remove_document(
+    document_id: int,
+    db: Session = Depends(get_session),
+    _: CurrentUser = Depends(require_permission("kb.manage_docs"))
+) -> Response:
+    service.delete_document(db, document_id)
+    return Response(status_code=204)

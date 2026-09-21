@@ -255,5 +255,39 @@ def change_visibility(db: Session, document_id: int, visibility: str):
         db.refresh(row)
         return row
 
+def delete_document(db: Session, document_id: int) -> None:
+    with INDEX_LOCK:
+        row = repository.get_document(db, document_id)
+        if row is None:
+            raise HTTPException(status_code=404, detail="文档不存在")
 
+        source_path = row.source_path
+        path = _document_path(source_path)
+        backup = path.with_suffix(path.suffix + f".{uuid4().hex}.pending_delete")
+
+        try:
+            deleted_vectors = delete_source(source_path)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=503,
+                detail="索引服务不可用，本次删除未执行",
+            ) from exc
+
+        try:
+            if path.exists():
+                path.replace(backup)
+            db.delete(row)
+            db.commit()
+        except Exception:
+            db.rollback()
+            if backup.exists():
+                backup.replace(path)
+            if deleted_vectors and path.is_file():
+                try:
+                    index_document(path)
+                except Exception:
+                    pass
+            raise
+
+        backup.unlink(missing_ok=True)
 
