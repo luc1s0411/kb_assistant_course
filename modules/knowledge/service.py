@@ -141,12 +141,12 @@ async def upload_document(db:Session,file:UploadFile,visibility,userid):
     document:KnowledgeDocument = _save_document(db, name, suffix, content, visibility, userid)
     # 3.切片
     # 3.1 读取硬盘上的文件和内容  _document_path =  ./data/docs/public/eab51198bb5346da9ad94b94b89ae534.md
-    # 读取硬盘文件，转成一个charmdb能存的document   documents = []
+    # 读取硬盘文件，转成一个chromadb能存的document   documents = []
     documents = load_file(_document_path(document.source_path), settings.docs_dir)
     # 切片存储  切完后的列表数据
     chunks = split_docs(documents)
 
-    # 把切的块存入charomdb
+    # 把切的块存入chromadb
     _add_chunks(chunks)
 
     document.chunk_count = len(chunks)
@@ -155,5 +155,10 @@ async def upload_document(db:Session,file:UploadFile,visibility,userid):
     db.commit()
 
 
-    # 4.存入chromdb
+    # 4.存入chromadb
     return document
+
+from modules.knowledge.schemas import KnowledgeDocumentPage
+def get_documents(db:Session, page:int, page_size:int):
+    rows, total = repository.list_documents(db, page, page_size)
+    return KnowledgeDocumentPage(items=rows, total=total, page_size=page_size, page=page)

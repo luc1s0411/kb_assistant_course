@@ -25,7 +25,7 @@ async def register(userinfo: RegisterIn,db:Session=Depends(get_session)):
 
 @router.post("/login",response_model=TokenOut)
 async def login(data:LoginIn,db:Session=Depends(get_session)):
-    # 调用sevice实现登录
+    # 调用service实现登录
     return  login_user(db,data)
 
 from modules.user.schemas import RefreshIn

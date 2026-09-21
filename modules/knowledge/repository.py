@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from modules.knowledge.model import KnowledgeDocument
 # 世界标准时间，伦敦时间 0时区时间
@@ -25,6 +25,12 @@ def create_document( db: Session, original_name: str,
     # 因为我们是保存数据，一旦提交就能够获取到id
     db.flush()
     return row
+
+def list_documents(db: Session, page:int, page_size:int):
+    total = db.scalar(select(func.count()).select_from(KnowledgeDocument))
+    rows = db.scalars(select(KnowledgeDocument).order_by(KnowledgeDocument.id.desc())
+                      .offset((page-1)*page_size).limit(page_size)).all()
+    return list(rows), int(total)
 
 def all_documents(db: Session) -> list[KnowledgeDocument]:
     return list(db.scalars(select(KnowledgeDocument)).all())
