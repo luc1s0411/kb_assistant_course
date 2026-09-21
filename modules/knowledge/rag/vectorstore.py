@@ -56,12 +56,16 @@ def source_count(source_path: str) -> int:
 
 
 def delete_source(source_path: str) -> int:
+
     collection = _get_existing_collection()
     if collection is None:
         return 0
+    # 通过metadata查询这个文档的所有数据
+    # select * from document where source_path=''
     result = collection.get(where={"source_path": source_path}, include=[])
     ids = result["ids"]
     if ids:
+        # 清空文档在chromadb中的所有数据
         collection.delete(ids=ids)
     return len(ids)
 

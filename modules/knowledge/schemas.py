@@ -3,9 +3,12 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
+# Literal ：限制只能传这两个参数，否则报错
+from typing import Literal
+class VisibilityIn(BaseModel):
+    visibility: Literal["public", "internal"]
 
 class KnowledgeDocumentOut(BaseModel):
-    # 允许从 SQLAlchemy ORM 对象直接校验/序列化
     model_config = ConfigDict(from_attributes=True)
 
     id : int                    # id
@@ -21,7 +24,7 @@ class KnowledgeDocumentOut(BaseModel):
     updated_at: datetime        # 更新时间
 
 class KnowledgeDocumentPage(BaseModel):
-    items : list[KnowledgeDocumentOut]
-    total : int
-    page : int
+    items: list[KnowledgeDocumentOut]
+    total: int
+    page: int
     page_size: int

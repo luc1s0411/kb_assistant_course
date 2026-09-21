@@ -158,7 +158,102 @@ async def upload_document(db:Session,file:UploadFile,visibility,userid):
     # 4.存入chromadb
     return document
 
+def _index_saved_document(db: Session, row) -> int:
+    source_path = row.source_path
+    try:
+        # 先清掉该来源可能残留的旧块，再只索引当前文件。
+        delete_source(source_path)
+        chunks = index_document(_document_path(source_path))
+        if chunks:
+            # 告诉mysql存了多少片
+            repository.mark_indexed(row, chunks)
+        else:
+            row.chunk_count = 0
+            repository.mark_error(row, "未读取到该文档的可索引文本，请检查文件")
+        db.commit()
+        return chunks
+    except Exception as exc:
+        db.rollback()
+        try:
+            # 防止 add_documents 中途失败后留下当前来源的半截数据。
+            delete_source(source_path)
+        except Exception:
+            pass
+        row.chunk_count = 0
+        repository.mark_error(row, "当前文件索引失败，请检查解析文件、Ollama 与 Chroma")
+        db.commit()
+        raise HTTPException(
+            status_code=503,
+            detail="文档变更已保存，但当前文件索引失败；修复后调用 POST /knowledge/reindex",
+        ) from exc
+
+
 from modules.knowledge.schemas import KnowledgeDocumentPage
 def get_documents(db:Session, page:int, page_size:int):
     rows, total = repository.list_documents(db, page, page_size)
-    return KnowledgeDocumentPage(items=rows, total=total, page_size=page_size, page=page)
+    return KnowledgeDocumentPage(items=rows, total=total,page_size=page_size, page=page)
+
+from modules.knowledge.rag.vectorstore import delete_source
+from modules.knowledge.ingestion.build_index import index_document
+# 线程锁，控制多人同时操作，只有一个人能执行，顺次执行。为了避免高并发的数据错乱
+from threading import RLock
+INDEX_LOCK = RLock()
+def change_visibility(db: Session, document_id: int, visibility: str):
+    with INDEX_LOCK:
+        # 一行数据
+        row = repository.get_document(db, document_id)
+        if row is None:
+            raise HTTPException(status_code=404, detail="文档不存在")
+
+        old_source_path = row.source_path
+        # 找到文件存到硬盘的路径
+        old_path = _document_path(old_source_path)
+        if not old_path.is_file():
+            raise HTTPException(status_code=409, detail="文档文件缺失，请删除记录后重新上传")
+        if row.visibility == visibility:
+            return row
+
+        # 用户想改的硬盘路径
+        new_path = _document_path(f"{visibility}/{row.stored_name}")
+        if new_path.exists():
+            raise HTTPException(status_code=409, detail="目标文件已经存在")
+
+        try:
+            # 删除chromdb中的文档数据
+            old_vector_count = delete_source(old_source_path)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=503,
+                detail="索引服务不可用，本次可见范围修改未执行",
+            ) from exc
+
+        new_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            # 硬盘移动了老文件到新位置
+            old_path.replace(new_path)
+
+            row.visibility = visibility
+            row.source_path = new_path.relative_to(settings.docs_dir.resolve()).as_posix()
+            row.status = "pending"
+            row.chunk_count = 0
+            row.error_message = None
+            db.commit()
+        except Exception:
+            db.rollback()
+            if new_path.exists():
+                new_path.replace(old_path)
+            if old_vector_count and old_path.is_file():
+                try:
+                    # 如果报错，之前冲chromdb删除的数据，再恢复回来(重新构建)。
+                    index_document(old_path)
+                except Exception:
+                    pass
+            raise
+
+        # 第一，把文件加载到chrmadb，第二，更新mysql数据中的数据
+        _index_saved_document(db, row)
+        db.refresh(row)
+        return row
+
+
+
