@@ -1,51 +1,55 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter,Depends
 from pydantic import EmailStr
 from sqlalchemy.orm import Session
-
-from modules.user.dependencies import get_current_user
-from modules.user.model import User
-from modules.user.repository import get_user_by_id
-
-router = APIRouter(prefix="/auth", tags=["用户认证"])
 from database.connection import get_session
-from modules.user.service import request_verification_code
-@router.get("/sendCode")
-async def send_code(email: EmailStr,db:Session=Depends(get_session)):
-    return await request_verification_code(email,db)
+from modules.user.model import User
+from modules.user.schemas import RegisterIn, CurrentUser, LoginIn, TokenOut, RefreshIn
 
-# 插入用户传递的数据
-from modules.user.schemas import RegisterIn, CurrentUser, LoginIn, TokenOut, UpdatePasswordIn
-from modules.user.service import register_user,login_user,refresh_tokens,update_profile, update_password_by_id
+router=APIRouter(prefix="/auth",tags=["用户认证"])
+
+# from modules.user.verification import send_code_email,generate_code
+from modules.user.service import request_verification_code, register_user
+from modules.user.service import login_user
+
+
+@router.get("/send_code")
+async def send_code(email:EmailStr,db:Session=Depends(get_session)):
+    # await send_code_email(email,generate_code())
+    await request_verification_code(email,db)
+    return {"message":f"验证码发送成功庆计时去{email}看"}
+
 
 @router.post("/register",response_model=CurrentUser)
-async def register(userinfo: RegisterIn,db:Session=Depends(get_session)):
-    # 调用serviece的代码存入数据
+async def register(userinfo:RegisterIn,db:Session=Depends(get_session)):
     return await register_user(db,userinfo)
-
 
 @router.post("/login",response_model=TokenOut)
 async def login(data:LoginIn,db:Session=Depends(get_session)):
-    # 调用service实现登录
-    return  login_user(db,data)
+    return login_user(db,data)
 
-from modules.user.schemas import RefreshIn
+from modules.user.service import refresh_tokens
 @router.post("/refresh",response_model=TokenOut)
-async def refresh(data: RefreshIn, db: Session = Depends(get_session)) -> TokenOut:
-    return refresh_tokens(db, data)
+async def refresh(data:RefreshIn,db:Session=Depends(get_session)) -> TokenOut:
+    return refresh_tokens(db,data)
 
+from modules.user.dependencies import get_current_user
+#使用依赖注入token解析me，获取数据
 @router.get("/me",response_model=CurrentUser)
 async def me(user:CurrentUser=Depends(get_current_user)):
     return user
 
+from modules.user.service import updateprofile
 from modules.user.schemas import ProfileUpdateIn
-@router.put("/me",response_model=CurrentUser)
-def update_me(data: ProfileUpdateIn,
-              user: CurrentUser = Depends(get_current_user),
-              db: Session = Depends(get_session)):
-    return update_profile(data, user, db)
 
+@router.put("/me",response_model=CurrentUser)
+def updateme(data:ProfileUpdateIn,
+             user:CurrentUser=Depends(get_current_user),
+             db:Session=Depends(get_session)):
+    return updateprofile(data,user,db)
+from modules.user.schemas import updatePasswordIn
+from modules.user.service import updatepasswordByID
 @router.put("/me/password")
-def update_password(data:UpdatePasswordIn,
-                    current_user:CurrentUser = Depends(get_current_user),
-                    db: Session = Depends(get_session)):
-    return update_password_by_id(data, current_user, db)
+async def updatePassword(data:updatePasswordIn,
+                   current_user:CurrentUser=Depends(get_current_user),
+                   db:Session=Depends(get_session)):
+    return updatepasswordByID(data,current_user,db)

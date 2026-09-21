@@ -53,3 +53,5 @@ def mark_error(row: KnowledgeDocument, message: str) -> None:
     row.status = "error"
     row.error_message = message[:2000]
     row.updated_at = utc_now()
+
+

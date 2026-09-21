@@ -266,6 +266,7 @@ def delete_document(db: Session, document_id: int) -> None:
         backup = path.with_suffix(path.suffix + f".{uuid4().hex}.pending_delete")
 
         try:
+            #从chromadb删除一条数据
             deleted_vectors = delete_source(source_path)
         except Exception as exc:
             raise HTTPException(
@@ -288,6 +289,50 @@ def delete_document(db: Session, document_id: int) -> None:
                 except Exception:
                     pass
             raise
-
+        # 在硬盘删除一个文档
         backup.unlink(missing_ok=True)
+
+from modules.knowledge.rag.vectorstore import delete_source, reset_collection, source_count
+from modules.knowledge.ingestion.build_index import index_document, index_documents
+from modules.knowledge.repository import *
+def _refresh_index(db: Session) -> int:
+    try:
+        chunks = index_documents()
+        for row in repository.all_documents(db):
+            # 用mysql中的一条数据，取chromadb查找切片数
+            count = source_count(row.source_path)
+            if count:
+                # 更新回mysql
+                repository.mark_indexed(row, count)
+            else:
+                row.chunk_count = 0
+                repository.mark_error(row, "未读取到该文档的可索引文本，请检查文件")
+        db.commit()
+        return chunks
+    except Exception as exc:
+        db.rollback()
+        try:
+            # 全量重建失败时不保留可能只写入一部分的 collection。
+            reset_collection()
+        except Exception:
+            pass
+        for row in repository.all_documents(db):
+            row.chunk_count = 0
+            repository.mark_error(row, "索引重建失败，请检查解析文件及索引服务后重新构建")
+        db.commit()
+        raise HTTPException(
+            status_code=503,
+            detail="全量索引重建失败；修复后再次调用 POST /knowledge/reindex",
+        ) from exc
+
+def rebuild_index(db: Session) -> dict:
+    with INDEX_LOCK:
+        return {"status": "ok", "chunks": _refresh_index(db)}
+
+from modules.knowledge.rag.vectorstore import collection_count
+def get_index_status() -> dict:
+    try:
+        return {"status": "ok", "chunks": collection_count()}
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="索引服务不可用") from exc
 

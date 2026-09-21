@@ -5,7 +5,7 @@ from pathlib import Path
 from core.config import settings
 from modules.knowledge.ingestion.loader import load_docs, load_file, split_docs
 from modules.knowledge.rag.vectorstore import get_vectorstore, reset_collection
-    
+
 
 def _chunk_id(document) -> str:
     payload = {

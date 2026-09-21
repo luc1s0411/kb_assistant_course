@@ -1,16 +1,12 @@
 from pathlib import Path
-
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from core.config import settings
 import docx
 from langchain_core.documents import Document
 from pypdf import PdfReader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-from core.config import settings
-
 
 SUPPORTED_SUFFIXES = {".pdf", ".docx", ".md", ".txt"}
 VISIBILITIES = {"public", "internal"}
-
 
 def _visibility(path: Path, docs_dir: Path) -> str:
     relative = path.relative_to(docs_dir)
@@ -18,7 +14,6 @@ def _visibility(path: Path, docs_dir: Path) -> str:
     if first_part in {"employee", "hr", "internal"}:
         return "internal"
     return first_part if first_part in VISIBILITIES else "public"
-
 
 def _metadata(path: Path, docs_dir: Path, **extra) -> dict:
     return {
@@ -29,6 +24,24 @@ def _metadata(path: Path, docs_dir: Path, **extra) -> dict:
         **extra,
     }
 
+def load_text(path: Path, docs_dir: Path) -> list[Document]:
+    # 读取文件内容
+    text = path.read_text(encoding="utf-8-sig")
+    if not text.strip():
+        return []
+    #按页读取
+    return [Document(page_content=text, metadata=_metadata(path, docs_dir))]
+
+def load_docx(path: Path, docs_dir: Path) -> list[Document]:
+    document = docx.Document(str(path))
+    blocks = [paragraph.text.strip() for paragraph in document.paragraphs]
+    for table in document.tables:
+        for row in table.rows:
+            blocks.append(" | ".join(cell.text.strip() for cell in row.cells))
+    text = "\n".join(block for block in blocks if block)
+    if not text:
+        return []
+    return [Document(page_content=text, metadata=_metadata(path, docs_dir))]
 
 def load_pdf(path: Path, docs_dir: Path) -> list[Document]:
     reader = PdfReader(str(path))
@@ -44,26 +57,6 @@ def load_pdf(path: Path, docs_dir: Path) -> list[Document]:
             )
     return documents
 
-
-def load_docx(path: Path, docs_dir: Path) -> list[Document]:
-    document = docx.Document(str(path))
-    blocks = [paragraph.text.strip() for paragraph in document.paragraphs]
-    for table in document.tables:
-        for row in table.rows:
-            blocks.append(" | ".join(cell.text.strip() for cell in row.cells))
-    text = "\n".join(block for block in blocks if block)
-    if not text:
-        return []
-    return [Document(page_content=text, metadata=_metadata(path, docs_dir))]
-
-
-def load_text(path: Path, docs_dir: Path) -> list[Document]:
-    text = path.read_text(encoding="utf-8-sig")
-    if not text.strip():
-        return []
-    return [Document(page_content=text, metadata=_metadata(path, docs_dir))]
-
-
 def load_file(path: Path, docs_dir: Path) -> list[Document]:
     suffix = path.suffix.lower()
     if suffix == ".pdf":
@@ -73,7 +66,6 @@ def load_file(path: Path, docs_dir: Path) -> list[Document]:
     if suffix in {".txt", ".md"}:
         return load_text(path, docs_dir)
     raise ValueError("只支持 txt、md、pdf、docx")
-
 
 def load_docs(dir_path: str | Path | None = None) -> list[Document]:
     docs_dir = Path(dir_path or settings.docs_dir).resolve()
