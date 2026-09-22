@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from modules.user.router import router as user_router
 from modules.knowledge.router import router as knowledge_router
+from modules.admin.router import router as admin_router
 app = FastAPI()
 
 app.include_router(user_router)
 app.include_router(knowledge_router)
+app.include_router(admin_router)
 @app.get("/")
 async def root():
     return {"message": "Hello World"}

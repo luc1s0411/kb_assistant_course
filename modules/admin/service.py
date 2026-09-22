@@ -17,3 +17,17 @@ def get_roles(db: Session) -> list[RoleOut]:
 
 def get_permissions(db: Session) -> list[str]:
     return repository.list_permissions(db)
+
+def set_role_permissions(db: Session, role_code: str, requested: list[str]) -> RoleOut:
+    role = repository.get_role(db, role_code)
+    if role is None:
+        raise HTTPException(status_code=404, detail="角色不存在")
+    codes = {code.strip() for code in requested if code.strip()}
+    if not repository.permission_codes_exist(db, codes):
+        raise HTTPException(status_code=400, detail="请求中包含不存在的权限码")
+    if role_code == "public" and "kb.view_public" not in codes:
+        raise HTTPException(status_code=400, detail="public 必须保留 kb.view_public")
+    repository.replace_role_permissions(db, role_code, codes)
+    db.commit()
+    db.refresh(role)
+    return RoleOut(code=role.code, name=role.name, permissions=sorted(codes))
