@@ -31,3 +31,12 @@ def set_role_permissions(db: Session, role_code: str, requested: list[str]) -> R
     db.commit()
     db.refresh(role)
     return RoleOut(code=role.code, name=role.name, permissions=sorted(codes))
+
+def set_user_role(db: Session, user_id: int, role_code: str) -> UserRoleOut:
+    if repository.get_role(db, role_code) is None:
+        raise HTTPException(status_code=400, detail="角色不存在")
+    user = repository.set_user_role(db, user_id, role_code)
+    if user is None:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    db.commit()
+    return UserRoleOut(user_id=user.id, role_code=user.role_code)

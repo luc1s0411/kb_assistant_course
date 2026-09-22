@@ -28,3 +28,11 @@ def replace_role_permissions(db: Session, role_code: str, codes: set[str]) -> No
             insert(role_permissions),
             [{"role_code": role_code, "permission_code": code} for code in sorted(codes)],
         )
+
+def set_user_role(db: Session, user_id: int, role_code: str) -> User | None:
+    user = db.get(User, user_id)
+    if user is None:
+        return None
+    user.role_code = role_code
+    db.flush()
+    return user

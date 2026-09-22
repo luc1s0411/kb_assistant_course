@@ -33,3 +33,12 @@ def update_role_permissions(
     _: CurrentUser = Depends(require_permission("system.manage_roles")),
 ) -> RoleOut:
     return service.set_role_permissions(db, role_code, data.permission_codes)
+
+@router.put("/users/{user_id}/role", response_model=UserRoleOut)
+def update_user_role(
+    user_id: int,
+    data: UserRoleIn,
+    db: Session = Depends(get_session),
+    _: CurrentUser = Depends(require_permission("system.manage_users")),
+) -> UserRoleOut:
+    return service.set_user_role(db, user_id, data.role_code)
